@@ -82,13 +82,10 @@
 %%            country={}}
 %% \fntext[label3]{}
 
-\title{Inverse design workflow of implicit surface-based cellular materials via conditional generative model and active learning}
-
+\title{Editable Design of Cellular Metamaterials via Conditional Generative Networks and Active Learning}
 
 \author[1]{Jiaxuan Ma}
 \author[3]{Bin Cao}
-\author[1]{Yuan Tian\corref{cor1}}
-\ead{tian0321@shu.edu.cn}
 \author[3]{Tong-Yi Zhang}
 \author[1,2]{Sheng Sun\corref{cor1}}
 \ead{mgissh@t.shu.edu.cn}
@@ -101,7 +98,7 @@
 \cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Implicit surface-based cellular materials have gained significant attention in bone scaffold applications due to their structural resemblance to natural bone. These materials exhibit excellent mechanical properties and bioadaptability, providing an ideal environment for bone tissue regeneration. However, the rational design of such materials often relies heavily on expert knowledge and extensive trial-and-error experiments. In the work, we propose a data-efficient, two-stage bi-objective optimization framework within a machine learning paradigm, which accounts for the disparate computational costs associated with different objectives. Specifically, we apply this methodology to the inverse design of orthopedic implants, integrating a generative model, active learning, and finite element analysis to achieve cellular materials with both biocompatible elastic modulus and enhanced yield strength. Our approach demonstrates significant improvements in overall performance compared to the initial dataset, while reducing design costs by approximately sixfold relative to conventional one-step bi-objective machine learning optimization methods. This framework establishes an efficient paradigm for the rapid and intelligent design of cellular materials with tailored mechanical properties, particularly in scenarios where objectives involve imbalanced computational costs.
+Implicit surface-based cellular metamaterials have garnered significant attention in bone scaffold applications due to their structural mimicry of natural bone, offering exceptional mechanical properties and bioadaptability for tissue regeneration. However, traditional design approaches for these metamaterials remain constrained by reliance on expert intuition and iterative trial-and-error processes, limiting their adaptability to diverse performance requirements. To address this, we propose an editable design framework leveraging conditional generative networks and active learning within a data-efficient, two-stage bi-objective optimization paradigm. This methodology explicitly addresses disparate computational costs between objectives—here applied to the inverse design of orthopedic implants—by integrating conditional generative networks for topology synthesis, active learning for targeted exploration of the design space, and finite element analysis for mechanical evaluation. The conditional generative networks enable explicit control over metamaterial geometry, while active learning minimizes costly simulations by prioritizing high-potential candidates. Compared to conventional bi-objective optimization methods, our approach achieves a sixfold reduction in computational expenses while significantly improving yield strength and biocompatible elastic modulus relative to baseline datasets. This framework establishes a paradigm for rapid, customizable design of cellular metamaterials with tailored mechanical properties, particularly in scenarios where objectives involve imbalanced computational effort. By unifying editable generative modeling with adaptive sampling, our work advances the intelligent and efficient development of metamaterials for applications demanding multifunctional performance.
 \end{abstract}
 
 %%Graphical abstract
@@ -167,35 +164,27 @@ In the work, a voxel-based asymptotic homogenization method \citep{Dong2019} is 
 \end{equation}
 Here, $\bar{\varepsilon}$ represents the mean or macroscopic strain within the unit cell, while $\varepsilon^{*}$ denotes the perturbation strain at the periodic microscale. The perturbation strain is derived from the mechanical balance equation:
 \begin{equation}
-\int_{\Omega}\hat{\varepsilon}^T:\mathbb{C}:\varepsilon^{*}d\Omega = \int_{\Omega}\hat{\varepsilon}^T:\mathbb{C}:\bar{\varepsilon}
+\int_{\Omega}\hat{\varepsilon}^T:\mathbb{C}:\varepsilon d\Omega = \int_{\Omega}\hat{\varepsilon}^T:\mathbb{C}^H:\bar{\varepsilon}d\Omega
 \label{eq:3}
 \end{equation}
 In this equation, $\hat{\varepsilon}$ is the virtual strain, $\mathbb{C}$ is the elastic tensor of the constituent materials, and $\Omega$ represents the unit cell. This equation is numerically discretized and evaluated using the FEM, which employs eight-node hexahedrons to voxelize each unit cell into $40 \times 40 \times 40$ cubes (see Fig S1). Once $\varepsilon^{*}$ is obtained, the effective elastic tensor $\mathbb{C}^H$ can be determined using the following equation:
+% \begin{equation}
+% \mathbb{C}^H:\bar{\varepsilon} = \frac{1}{|\Omega|}\int_{\Omega}\mathbb{C}:(\bar{\varepsilon}+\varepsilon^{*})d\Omega
+%     \label{eq:4}
+% \end{equation}
+
 \begin{equation}
-\mathbb{C}^H:\bar{\varepsilon} = \frac{1}{|\Omega|}\int_{\Omega}\mathbb{C}:(\bar{\varepsilon}+\varepsilon^{*})d\Omega
-    \label{eq:4}
+    \mathbb{C}^H = \sum_{i=1}^m\frac{\Omega_e}{|\Omega|}\mathbb{C}(I-B\chi_e)
 \end{equation}
+
 where $|\Omega|$ denotes the volume of the unit cell.
 
-From the effective elastic tensor $\mathbb{C}^H$, the compliance tensor $\mathbb{S}^H$ can be derived, and its Voigt form is expressed as:
-\begin{equation}
-\mathbb{S}^H = \begin{bmatrix}
-\frac{1}{E_x} & -\frac{v_{yx}}{E_y} & -\frac{v_{zx}}{E_z} & 0 & 0 & 0 \\
--\frac{v_{xy}}{E_x} & \frac{1}{E_y} & -\frac{v_{zy}}{E_z} & 0 & 0 & 0 \\
--\frac{v_{xz}}{E_x} & -\frac{v_{yz}}{E_z} & \frac{1}{E_z} & 0 & 0 & 0 \\
-0 & 0 & 0 & \frac{1}{G_{yz}} & 0 & 0 \\
-0 & 0 & 0 & 0 & \frac{1}{G_{zx}} & 0 \\
-0 & 0 & 0 & 0 & 0 & \frac{1}{G_{xy}}
-\end{bmatrix}
-\label{eq:5}
-\end{equation}
-
-In this matrix, $E_i$ represents the elastic modulus along the $i^{\text{th}}$ direction, where $i \in \{x, y, z\}$. In the work, for cubic symmetric unit cells, we have effective elastic modulus $E^H=E_x=E_y=E_z$. Additionally, elastic modulus in other directions can be obtained from $\mathbb{S}^H$ using the following equation:
+Elastic modulus $E_i$, where $i \in \{x, y, z\}$, in different directions $(x,y,z)$  can be calculated using the following equation:
 \begin{equation}
 \frac{1}{E_{ijk}} = \mathbb{S}^H_{11} - 2 \left(\mathbb{S}^H_{11} - \mathbb{S}^H_{12} - \frac{1}{2} \mathbb{S}^H_{44} \right) \times \left( \ell_{i1}^2 \ell_{j2}^2 + \ell_{j2}^2 \ell_{k3}^2 + \ell_{i1}^2 \ell_{k3}^2 \right)
     \label{eq:6}
 \end{equation}
-Here, $E_{ijk}$ is the elastic modulus along the $[i,j,k]$ direction, and $\ell$ is the cosine of the angle between the orientation $[i,j,k]$ and the coordinate axes $[x, y, z]$. This approach allows for the evaluation of elastic modulus in any orientation of the unit cell, facilitating the construction of a three-dimensional elastic modulus surface (see Fig S1).
+where $E_{ijk}$ is the elastic modulus along the $[i,j,k]$ direction, $\ell$ is the cosine of the angle between the orientation $[i,j,k]$ and the coordinate axes $[x, y, z]$, and $\mathbb{S}^H$ the compliance tensor with $\mathbb{S}^H = (\mathbb{C}^H)^{-1}$. This approach allows for the evaluation of elastic modulus in any orientation of the unit cell, facilitating the construction of a three-dimensional elastic modulus surface (see Fig S1).
 
 \subsection{The architecture of TPMS-WGAN model}
 
@@ -209,7 +198,6 @@ where $D$ belongs to the set of 1-Lipschitz functions, $\mathbb{P}_r$ and $\math
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{figures/3.pdf}        
-    \caption{\textbf{Generative modeling framework}. The conditional WGAN model can address multiple conditions including mechanical and geometric features of TPMS unit cell, here we called it TPMS-WGAN. Each condition can be turned on$/$off to meet various design requirements. Considering elastic modulus, the TPMS-WGAN takes effective elastic modulus $E$ and random noise $\boldsymbol{z} (\boldsymbol{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$, a Gaussian distribution of zero mean and the identity as the covariance matrix) as input to generator $G_\phi^1$, and the generated TPMS structure (denoted by implicit function parameters $\boldsymbol{p}'$), $E$ and the real TPMS structure (denoted by $\boldsymbol{p}$) are then passed to the discriminator $D_\theta$ to output value $f_D$. The $\boldsymbol{p}'$ also is passed navigator $R_\omega$ to obtained the predicted effective elastic modulus $E'$.}
     \label{fig:2}
 \end{figure}
   
@@ -334,7 +322,7 @@ The continuous and low-dimensional latent space with generative cabilities is pa
     \mathcal{L}_{IG} = \frac{1}{m}\sum_{i=1}^m(\boldsymbol{p}^{(i)}-\boldsymbol{p}'^{(i)})= \frac{1}{m}\sum_{i=1}^m(\boldsymbol{p}^{(i)}-IG_\psi(\boldsymbol{z}',\bar{\boldsymbol{s}})^{(i)})
 \label{eq:21}
 \end{equation}
-where $m$ is batch size (more details about ITPMS-GAN are shown in Table S4). A major advantage of ITPMS-GAN is its flexibility, allowing for explainable structural editing. As illustrated in Fig. \ref{fig:5}\textbf{b}, the pore diameter of a TPMS unit cell from the test set can be edited using ITPMS-GAN. A TPMS unit cell, characterized by a relative density of\textbf{ 0.32 mm}, a pore diameter of \textbf{21 mm}, and a thickness of \textbf{14 mm}, is represented by a geometry vector $\boldsymbol{s}$ (Fig \ref{fig:5}\textbf{b} (iii)). To adjust the pore diameter in $\boldsymbol{s}$ to 19 mm, 20 mm, 21 mm, 22 mm, and 23 mm, we first map the structure parameters $\boldsymbol{p}$ to the latent representation $\boldsymbol{z}'$. This latent representation, combined with the specified pore diameter as a condition, serves as input to $G_\phi^2$ (more details about $G^2_\phi$ are provided in Table S3). The generated TPMS structures exhibit a gradual variation corresponding to the variations of pore diameter, as depicted in Fig. \ref{fig:5}\textbf{b}. We conducted simulations to assess the geometric features of the generated structures. The actual geometries closely matched the designed ones, except for pore diameters of 19 mm and 23 mm, which measured 18.5 mm and 24 mm, respectively. In the 2D t-SNE plot of the training dataset structures (Fig. \ref{fig:5}c), the generated structures are visualized to assess their spatial distribution. The structure with a pore diameter of 19 mm is located on the boundary of the TPMS structure, with the design error primarily resulting from the limited data available in the training set, hindering the model's ability to learn its features. Furthermore, there is a significant discrepancy between the pre-set and validated pore diameters for 23 mm and 24 mm. Figure \ref{fig:5}\textbf{c} also reveals that the structure \textbf{v} is positioned far from other designed structures, forming a distinct D-like shape, and exhibits greater similarity to structure G. The ITPMS-GAN model offers an explainable method for editing TPMS unit cells, instead of interpolation in latent space or adjusting implicit function coefficients. The approach can be applied to diverse structures in virtual design space or create a more refined design space.
+where $m$ is batch size (more details about ITPMS-GAN are shown in Table S4). A major advantage of ITPMS-GAN is its flexibility, allowing for explainable structural editing. As illustrated in Fig. \ref{fig:5}\textbf{b}, the pore diameter of a TPMS unit cell from the test set can be edited using ITPMS-GAN. A TPMS unit cell, characterized by a relative density of\textbf{ 0.32 mm}, a pore diameter of \textbf{21 mm}, and a thickness of \textbf{14 mm}, is represented by a geometry vector $\boldsymbol{s}$ (Fig \ref{fig:5}\textbf{b} (iii)). To adjust the pore diameter in $\boldsymbol{s}$ to 19 mm, 20 mm, 21 mm, 22 mm, and 23 mm, we first map the structure parameters $\boldsymbol{p}$ to the latent representation $\boldsymbol{z}'$. This latent representation, combined with the specified pore diameter as a condition, serves as input to $G_\phi^2$ (more details about $G^2_\phi$ are provided in Table S3). The generated TPMS structures exhibit a gradual variation corresponding to the variations of pore diameter, as depicted in Fig. \ref{fig:5}\textbf{b}. We conducted simulations to assess the geometric features of the generated structures. The actual geometries closely matched the designed ones, except for pore diameters of 19 mm and 23 mm, which measured 18.5 mm and 24 mm, respectively. In the 2D t-SNE plot of the training dataset structures (Fig. \ref{fig:5}c), the generated structures are visualized to assess their spatial distribution. The structure with a pore diameter of 19 mm is located on the boundary of the TPMS structure, with the design error primarily resulting from the limited data available in the training set, hindering the model's ability to learn its features. Furthermore, there is a significant discrepancy between the pre-set and validated pore diameters for 23 mm and 24 mm. Figure \ref{fig:5}\textbf{c} also reveals that the structure \textbf{v} is positioned far from other designed structures, forming a distinct D-like shape, and exhibits greater similarity to structure G. The ITPMS-GAN model offers an explainable method for editing TPMS unit cells, instead of interpolation in latent space or adjusting implicit function coefficients. The approach can be applied to diverse structures in virtual design space and create a more refined design space.
 
 \begin{figure}
     \centering
@@ -361,29 +349,30 @@ The function $c(\boldsymbol{p}')$ reaches its maximum value when $E(\boldsymbol{
 
 \subsection{Develop high yield strength TPMS unit cells with matched elastic modulus via the constraint-aware strategy}
 
-The properties of the cellular materials are determined by both the scaffold architecture and the constituent materials. The mechanical response of the scaffold can be represented by a compressive stress-strain curve. Yield strength ($\sigma_{ys}$) is denoted by the yield point with 0.2 \% strain, which quantifies the maximum resistance prior to the onset of irreversible deformation. Calculating $\sigma_{ys}$ through simulation is resource-intensive due to the nonlinear plastic behavior of the constituent materials and the extensive number of discrete meshes involved. The yield strength calculation for each TPMS unit cell takes approximately 30 minutes, which is longer than the elastic modulus evaluation time of about 1 minute using FE simulation based on the numerical homogenization method (details about computing platform are provided in Supplementary Note S6). BO method is efficiently to applied into expensive-to-evaluate black box problem. Here we propose an active learning approach to optimize yield strength while adhering to constraints on the elastic modulus. A support vector machine (SVM) model is employed as the surrogate model, and bootstrap resampling is utilized to assess uncertainties by sampling the data with replacement. In present study, we sampled 16 candidates from the virtual design space and evaluated their yield strength using FEM. The training process of SVM was repeated 50 times, generating 50 resampled training sets to construct 50 SVM models. Consequently, each sample in the initial dataset yields 50 predicted values, which are used to determine the mean value ($\mu$) and the associated standard deviation ($\Sigma$).
+The properties of the cellular materials are determined by both the scaffold architecture and the constituent materials. The mechanical response of the scaffold can be represented by a compressive stress-strain curve. Yield strength ($\sigma_{ys}$) is denoted by the yield point with 0.2 \% strain, which quantifies the maximum resistance prior to the onset of irreversible deformation. Calculating $\sigma_{ys}$ through simulation is resource-intensive due to the nonlinear plastic behavior of the constituent materials and the extensive number of discrete meshes involved. The yield strength calculation for each TPMS unit cell takes approximately 30 minutes, which is longer than the elastic modulus evaluation time of about 1 minute using FE simulation based on the numerical homogenization method (details about computing platform are provided in Supplementary Note S6). BO method is efficiently to applied into expensive-to-evaluate black box problem. Here we propose an active learning approach to optimize yield strength while adhering to constraints on the elastic modulus. A support vector regressor (SVR) model is employed as the surrogate model, and bootstrap resampling is utilized to assess uncertainties by sampling the data with replacement. In present study, we sampled 16 candidates from the virtual design space and evaluated their yield strength using FEM. The training process of SVM was repeated 50 times, generating 50 resampled training sets to construct 50 SVR models. Consequently, each sample in the initial dataset yields 50 predicted values, which are used to determine the mean value ($\mu$) and the associated standard deviation ($\Sigma$).
 
-Figure \ref{fig:7}c illustrates the transition of the query sample from the blue dot to the red dot at the 1st iteration, facilitated by the elastic modulus constraint-aware EI approach introduced in \ref{sec:2-4}. This shift indicates that the constraint function of the elastic modulus alters the maximum expected improvement over the best observed value in the training dataset. A total of four iterations are performed, during which two samples are recommended and evaluated per iteration. The results are subsequently fed back into the dataset to initiate a new iteration.
 
-The diagonal plot in Fig \ref{fig:7}\textbf{a} reveals that the model predictions are basically consistent with the observation values and the strategy of constraint-aware active learning recommended samples with high yield strength. We monitor mean square error (MSE) and R$^2$ as the surrogate model is successively refined with the results of evaluated TPMS structures  (Fig. \ref{fig:7}\textbf{b}). 
+The diagonal plot in Fig \ref{fig:7}\textbf{a} reveals that the SVR model predictions are basically consistent with the observation values in intial dataset, which coefficient of determiantion $R^2$ and MSE are 0.94 and 0.28, respectively. Figure \ref{fig:7}\textbf{b }illustrates the transition of the query sample from the blue dot to the red dot at the 1st iteration, facilitated by the elastic modulus constraint-aware EI approach introduced in \ref{sec:2-4}. This shift indicates that the constraint function of the elastic modulus alters the maximum expected improvement over the best observed value in the training dataset. A total of four iterations are performed, during which two samples are recommended and evaluated per iteration. The results are subsequently fed back into the dataset to initiate a new iteration.
 
-The elastic modulus and yield strength of all recommended samples are presented in Fig. \ref{fig:7}(\textbf{d,e,f}). It is observed that the elastic modulus of these samples is closer to 6,000 MPa, with a mass center around 5,900 MPa, compared to the initial dataset, which has a mass center of approximately 5,800 MPa. Additionally, the yield strength of the recommended samples surpasses that of the initial dataset. To further demonstrate the efficacy of the constraint-aware active learning framework, the overall performance $Y$ of the TPMS unit cell is quantified by the following equation:
+As illustrated in Fig\ref{fig:7}\textbf{c}, the SVR model exhibits significant performance fluctuations during iterative process. The $R^2$ metric undergoes a dramatic decrease from 0.94 to 0.71 during the first iteration, accompanied by a substantial increase in MSE from 0.28 to 5.19. 
 
+The phenomenon arises from the enhancement of the elastic modulus-aware constraint of active learning extrapolation capability, which recommends samples with divergent distribution compared to the initial dataset, as shown in \ref{fig:7}\textbf{d}. During the first iteration, two samples exhibiting heterogeneous distributions compared to the initial dataset are selected through the elastic modulus-aware constraint and incorporated into the initial dataset. At this stage, the limited number of samples provides insufficient data for the SVR model to effectively capture extrapolation patterns in unexplored regions. Through successive iterations, however, the active learning approach progressively expands the dataset by recommending additional unknown areas of samples. This expansion enables the SVR model to continually refine its generalization ability, as evidenced by the gradual improvement of $R^2$ (to 0.94 and 0.97, 0.97 at the 2nd, 3rd, 4th, respectively) and reduction in MSE (to 2.02, 1.44, and 1.31 at the 2nd, 3rd, 4th, respectively).
+
+Figure \ref{fig:7}e illustrates the elastic modulus compatibility (EMC), defined by the absolute difference between 6000 MPa and the optimal elastic modulus in dataset. It can be observed that the EMC of recommended samples decrease from 279.76 MPa to 20.84 MPa while the yield strength (YS) increase from 148.19 MPa to 157.6 MPa after the first iteration, demonstrating the importance of the extrapolation in active learning framework.  In successive iterations, EMC progressively decrease to 8.57 MPa and YS gradually increase to 159.91 MPa, indicating effective convergence toward optimal target. To futher demonstrate the efficiency of the elastic modulus-aware active learning framework, the comprehensive performance index (CPI) of the TPMS unit cell is quantified by the following equation:
 \begin{equation}
-    Y = Y_E^N+Y_{\sigma_{ys}}^N
-\label{eq:23}
+    \text{CPI} = \text{EMC}_\text{norm}+\text{YS}_\text{norm}
 \end{equation}
-where 
+where
 \begin{equation}
     \begin{aligned}
-    Y_E^N &= \frac{Y_E-\text{min}(Y_E)}{\text{max}(Y_E)-\text{min}(Y_E)} 
- ,Y_E = \frac{1}{|E(\boldsymbol{p}')-E^*|}\\
-    Y^N_{\sigma_{ys}}& =\frac{Y_{\sigma_{ys}}-\text{min}(Y_{\sigma_{ys}})}{\text{max}(Y_{\sigma_{ys}})-\text{min}(Y_{\sigma_{ys}})} 
+        \text{EMC}_\text{norm} &= \frac{\text{EMC}_\text{max} - \text{EMC}}{\text{EMC}_\text{max} - \text{EMC}_\text{min}}\\
+        \text{YS}_\text{norm}&= \frac{\text{YS}-\text{YS}_\text{min}}{\text{YS}_\text{max} - \text{YS}_\text{min}}\\
     \end{aligned}
-\label{eq:24}
 \end{equation}
 
-This metric effectively reflects the design performance of TPMS unit cell in achieving a matched implant scaffold with enhanced yield strength. Figure \ref{fig:7}g indicates that the optimal structure was identified at the 2nd iteration, with a $Y$ value of 1.72, significantly higher than the optimal value of 0.22 in initial dataset. At the 3rd iteration, a decrease in overall performance was observed due to the active learning process, which integrates both exploration and exploitation capabilities. However, this approach led to improved performance at the 4th iteration. The stress-strain curve is depicted in Fig. \ref{fig:7}\textbf{i}, while Fig. \ref{fig:7}\textbf{h} presents the von Mises stress cloud plot. It is evident that stress concentration is localized at the junctions of unit cells. This study demonstrates that the constraint-aware active learning method successfully identified the optimal performance of TPMS structure even beyond the training dataset, indicating a degree of extrapolation capability. Such robustness is particularly advantageous in clinical scenarios, where patient data, including target material properties and mechanical ranges, are often unknown in advance, and initial data distributions can vary widely. Furthermore, the design cost of TPMS unit cells with matched elastic modulus and high yield strength is significantly reduced by employing a method that requires the assessment of only 24 sample yield strengths. This is in stark contrast to the 1372 assessments needed in the one-step machine learning method used for training the generative model with bi-objective conditions. As a result, the design time is reduced about sixfold.
+where $\text{EMC}_\text{max}$, $\text{EMC}_\text{min}$, $\text{YS}_\text{max}$, $\text{YS}_\text{min}$ were calculated using both the initial dataset and recommended samples. Within the initial dataset, the optimal values for $\text{EMC}_\text{norm}$ and $\text{YS}_\text{norm}$ were determined to be 0.22 and 0.67, respectively, resulting in an optimal CPI of 0.89. In the recommended samples, the CPI increased significantly to 2, indicating a substantial 124 \% improvement in performance compared to the initial dataset.
+
+The stress-strain curve and the von Mises stress cloud plot are depicted in Fig. \ref{fig:7}\textbf{f}. It is evident that stress concentration is localized at the junctions of unit cells. This study demonstrates that the constraint-aware active learning method successfully identified the optimal performance of TPMS structure even beyond the training dataset, indicating a degree of extrapolation capability. Such robustness is particularly advantageous in clinical scenarios, where patient data, including target material properties and mechanical ranges, are often unknown in advance, and initial data distributions can vary widely. Furthermore, the design cost of TPMS unit cells with ompatibilitedelastic modulus and high yield strength is significantly reduced by employing a method that requires the assessment of only 24 sample yield strengths. This is in stark contrast to the 1372 assessments needed in the one-step machine learning method used for training the generative model with bi-objective conditions. As a result, the design time is reduced about sixfold.
 
 \begin{figure}
     \centering
@@ -399,7 +388,7 @@ In summary, this study proposes a data-efficient, two-stage bi-objective inverse
 
 
 \section*{CRediT authorship contribution statement}
-Jiaxuan Ma: Writing – original draft, Software, Methodology, Investigation, Formal analysis, Conceptualization. Bin Cao: Software, Investigation, Conceptualization, Formal analysis. Yuan Tian: Writing – review \& editing, Investigation, Formal analysis. Sheng Sun: Writing – review \& editing, Supervision, Funding acquisition, Formal analysis.
+Jiaxuan Ma: Writing – original draft, Software, Methodology, Investigation, Formal analysis, Conceptualization. Bin Cao: Software, Investigation, Conceptualization, Formal analysis. Sheng Sun: Writing – review \& editing, Supervision, Funding acquisition, Formal analysis.
 
 \section*{Declaration of competing interest}
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared
